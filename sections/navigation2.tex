@@ -1,0 +1,41 @@
+% THIS FILE IS ELA408 SPECIFIC, CONTAINING TOOLBOX INFORMATION WHICH IS NOT NECESSARY FOR ELA400
+%------------------------------------------------------------------------------------------
+
+% Outline
+The design of Nav2 makes it very configurable and expandable, it also works for a multitude of robot types in a wide range of applications and environments\:\cite{macenski_marathon_2020}. It has also been shown to be safe, deterministic, reliable and robust in dynamic settings even during extended time frames\:\cite{macenski_marathon_2020}. 
+
+% Global path planning
+% Smac planner (templated A*)
+Smac planner is the standard global path planning system used by Nav2\:\cite{macenski_open-source_2024}. It uses a templated A* which performs search, and it is templated by node planner templates NodeT which implements the different planner-specifics\:\cite{macenski_open-source_2024}. With this, NodeT can select different templates which results in different planners and characteristics\:\cite{macenski_open-source_2024}. All the planners thus share the same A* algorithm but the cost function and neighborhood selection policies are decoupled\:\cite{macenski_open-source_2024}. This is further clarified when inspecting the node planners which contain two things\:\cite{macenski_open-source_2024}:
+\begin{itemize}
+    \item Node state: which includes things like collision state, visited status, queued status and accumulated cost of the node in the graph
+    \item Planner-specific: which includes how traversal costs should be computed, heuristics and expansion characteristics
+\end{itemize}
+Three different planner templates (NodeT) are offered, these are: cost-aware 2D-A*, cost-aware Hybrid-A* and cost-aware State Lattice\:\cite{macenski_open-source_2024}. Cost-aware means that additional information is encoded in the map and used by the path planner rather than just the common binary info of occupied or free (see costmap in Introduction\:\ref{section:intro})\:\cite{macenski_open-source_2024}.
+Finally there is an integration layer which, on the highest level, links the planner with the robot, thus allowing for easy deployment on multiple robotic frameworks\:\cite{macenski_open-source_2024}.
+% Smoothing global paths
+Nav2 includes three smoothing algorithms to help refine paths produced by the global path planner, these are: Simple Smoother, Constrained Smoother, and Savitzky-Golay Smoother\:\cite{macenski_desks_2023}.
+% Additional info
+For the complete specifications of Smac planner, see the work by Macenski \textit{et al.}\:\cite{macenski_open-source_2024}.
+
+% Local path planning
+% DWB
+The default local trajectory tracker used by Navigation2 is DWB, which is an expansion of Dynamic Window Approach (DWA)\:\cite{liu_path_2023}\cite{macenski_desks_2023}. DWB gathers a set of candidate commands, based on its current velocity and dynamic limits, by sub-sampling feasible velocities from a dynamic window, these velocities are projected forward to generate circular arcs (trajectories)\:\cite{macenski_desks_2023}. These arcs are then evaluated using a set of critic functions (which can optimize for different behaviors), and the best is chosen\:\cite{macenski_desks_2023}.
+% Additional info
+The interested reader is refereed to\:\cite{macenski_desks_2023} for additional information about the local trajectory tracking offered by Nav2.
+
+% Recovery
+Recovery behavior is used to prevent complete navigation failure and follows a protocol where initially the actions are conservative and then become more aggressive\:\cite{macenski_marathon_2020}. The actions can be system wide or specific to a certain task like planning and control\:\cite{macenski_marathon_2020}. Example actions include: clearing costmap, waiting and spinning\:\cite{macenski_marathon_2020}.
+
+%------------------------------------------------------------------------------------------
+
+
+%------------------------------------------------------------------------------------------
+\begin{comment}
+    , replacing Navigation Function (NavFn)\:\cite{macenski_desks_2023}
+    % RPP
+    %A local trajectory planner (path tracking) available in Navigation2 is the Regulated Pure Pursuit algorithm (RPP) which is an extension of Adaptive Pure Pursuit (APP)\:\cite{macenski_regulated_2023}. Compared to normal pure pursuit, this variant uses adaptive lookahead distance and takes into account and adapts linear and angular velocity to increase safety and operability, specifically in constrained and partially observable environments\:\cite{macenski_regulated_2023}. It achieves this by incorporating preemptive collision detection, using regulation heuristics and penalizing being close to obstacles as well as taking sharp turns\:\cite{macenski_regulated_2023}. RPP also achieves better efficiency, and thanks to the higher safety it offers, it allows the system to have higher maximum speed while still remaining safe\:\cite{macenski_regulated_2023}.
+    % Additional info
+    %For a complete understanding of the RPP algorithm see\:\cite{macenski_regulated_2023}.
+\end{comment}
+%------------------------------------------------------------------------------------------

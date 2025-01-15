@@ -1,0 +1,143 @@
+\section{Discussion}
+%------------------------------------------------------------------------------------------
+% Results
+
+%======================================================
+% SLAM map
+
+% SLAM maps obtained from both simulation and real-world
+The resulting maps obtained during simulation and real-world testing using SLAM (see Fig.\:\ref{fig:simulation_slam_map} and Fig.\:\ref{fig:real_world_slam_map}) were close to identical to the ground truth maps (see Fig.\:\ref{fig:simulation_map} and Fig.\:\ref{fig:real_world_map}), with only minor inconsistencies and slight skew. Thus providing very promising results in terms of mapping capabilities in small and simple environments.
+% Stairs
+It is worth noting that since a 2D LIDAR was used, the stairs in the real-world testing environment (see Fig.\:\ref{fig:real_world_map}) just gets mapped as free space (see Fig.\:\ref{fig:real_world_slam_map}).
+
+%======================================================
+% Evaluation metrics
+
+% Collisions
+The number of collisions in both simulation and real-world deployment can be explained by the quality of the SLAM maps. Since the testing environments were static, only static obstacles are a threat (dynamic obstacles are not present). Hence because the SLAM algorithm was able to achieve and provide very accurate maps, the algorithm was able to localize itself very well and easily avoid static obstacles.
+
+% Processing time per sensor update
+% 4th criteria
+Implementing code to measure the processing time per sensor update could not be finished because of time constraints. The project thus failed to report on the second evaluation metric (simulation and real-world) and to evaluate the fourth criteria. The fourth criteria (see Introduction\:\ref{section:intro}) is thus considered not achieved.
+% Improve performance
+However, the metric and criteria remained included (despite the inability to measure it) because the authors feel that the metric and criteria are essential to accurately evaluate the system and identify potential limitations. A few potential computational improvements are therefor outlined to help guide future work to better meet the fourth criteria.
+% Composition nodes + IPC
+First, the use of composition nodes in ROS2 has shown a substantial increase in performance and marks a possibly substantial improvement to the computation (CPU usage), memory and latency of the system, especially if combined with intra-process communication (IPC)\:\cite{macenski_impact_2023}.
+% Subset of LIDAR points
+Secondly, when using LIDAR for SLAM, one can consider using only a subset of all the LIDAR points, therefor reducing computational load, but trading it for a reduction in information\:\cite{filip_lidar_2023}.
+
+\begin{comment}
+% 5th criteria
+As seen in the Results\:\ref{section:results}, the system achieved consistent SLAM maps during testing scenarios lasting over one hour. The fifth criteria (see Introduction\:\ref{section:intro}) was therefor fulfilled by the system. This indicates that the algorithms have sufficient performance for longer sessions (as is supported by research for SLAM Toolbox\:\cite{macenski_slam_2021} and Navigation2\:\cite{macenski_marathon_2020}). Additionally, the robot design, in terms of storage (for the map) and energy storage, proved sufficient for longer mapping sessions.
+\end{comment}
+
+%======================================================
+% Test environments/scenarios
+
+% Things not considered/tested
+The system was not assessed in scenarios with different temperatures, light conditions, surfaces (e.g. uneven and different types), weather conditions like rain and fog, humidity and moisture, electromagnetic interference (EMI), and dynamic environments. Additionally, the impact of artificial versus natural light was not compared.
+% Implication and why they were not tested
+The system was designed to be able to handle some of these conditions (see the criteria in Introduction\:\ref{section:intro}), but sufficient resources could not be allocated to test the system in all necessary conditions. It is important that the system is evaluated in all the listed scenarios in future work to accurately establish the limitations of the system.
+% 1st criteria
+This makes evaluation of the first criteria from the Introduction\:\ref{section:intro} unresolved and is therefor considered not satisfied.
+
+%------------------------------------------------------------------------------------------
+% Problems
+
+%======================================================
+% Robot design
+
+% Thresholds, cables, carpets
+Given the design of the robot and the size of the wheels (mainly the small spherical wheels), obstacles such as thresholds, carpets and cables proved problematic for the robot to traverse. 
+% 4 wheel limitations
+The four wheel design also poses stability issues in uneven terrain where driving wheels might loose contact with the ground, damaging the performance of the robot and possibly resulting in the robot getting stuck. 
+% 2nd criteria
+These scenarios are common in human-made environments leading to the developed system failing to meet the second criteria established in the Introduction\:\ref{section:intro}.
+% Future design
+Future design would use only one stabilizing wheel, a caster wheel, and altering the location of the motorized wheels, thus moving to a three wheel design. This would improving stability and help the robot more easily scale carpet edges, cables lying on the floor, thresholds and similar. 
+
+%======================================================
+% Sensors
+
+% Fusion
+Sensor noise and other environmental factors like lighting variations (e.g. return signal overwhelmed by sunlight), sensor beams being reflected of environmental particles like rain and dust, all pose serious problems for SLAM\:\cite{corke_robotics_2023}. However, temporal fusion and sensor fusion can help mitigate these problems\:\cite{siegwart_introduction_2011}.
+% Sensor fusion
+Sensor fusion was employed in this project, but an additional sensor for measuring the surrounding could have helped to further improve performance by negating the limitations of the LIDAR. A good candidate would be a camera since it would complement the features offered by a LIDAR well (see Introduction\:\ref{section:intro})\:\cite{chen_slam_2022}. It is important to note that this would increase the computational complexity and future work needs to investigate this further\:\cite{chen_slam_2022}. 
+% Temporal fusion
+Temporal fusion also deserves consideration in future work. It could not be found that any of the toolboxes used in this project made use of temporal fusion.
+
+% LIDAR -> RADAR
+While this project used a LIDAR, expansion to dynamic environments should consider the use of a RADAR instead of a LIDAR since it can measure speed of objects\:\cite{ilas_electronic_2013}, which could help with collision avoidance. Additionally, a RADAR might offer better performance in low visibility weather conditions and harsh environments, like environments containing significant amount of dust particles\:\cite{fritsche_fusing_2018}.
+
+% LIDAR limitations
+% Reflection
+A potential issue for some range sensors is that they can have their entire signal absorbed or coherently reflected (no reflection is received by the sensor) such that the sensor output is NaN or the maximum possible value\:\cite{siegwart_introduction_2011}\cite{corke_robotics_2023}.
+% Sensor aliasing
+Another problem is sensor aliasing (also known as perceptual aliasing\:\cite{cadena_past_2016}), which is the difficulty for the robot to distinguish between states because it is given non unique data\:\cite{siegwart_introduction_2011}. This is the case for environments which are sparse, geometrically repetitive, and if the environment lacks sufficient amount of distinct features\:\cite{cai_lidarinertial_2023}.
+The problem stems from sensory inputs and states seeming identical to the robot\:\cite{siegwart_introduction_2011}. In all of these scenarios, the sensor values either remains unchanged, is not unique or there is insufficient amount of data\:\cite{cai_lidarinertial_2023}\cite{siegwart_introduction_2011}.
+A simple example which illustrates this is a robot only equipped with range-based sensors, for this robot, all hallways with equal distance between the walls seem identical. 
+% Empty
+It is also possible that there are no objects within sensor range, complicating localization and mapping since the robot is unable to observe anything in its surrounding\:\cite{siegwart_introduction_2011}\cite{corke_robotics_2023}.
+% Rotating part
+Moreover, since LIDARs have a rotating part\:\cite{ilas_electronic_2013} there is a small delay between all the LIDAR beam and value pairs. Hence the array of values provided by the LIDAR are not all from the exact same time instant, and therefor does not correspond to the exact same robot position (if the robot is moving).
+% Loop closure
+Additionally, LIDARs can struggle with loop closure because of its difficulty in extracting features (see Introduction\:\ref{section:intro})\:\cite{khan_investigation_2022}.
+% How this affects the system
+All of these issues signify limitations of using only a LIDAR as the sole sensor for measuring the surrounding, as was done in this project.
+% 3rd criteria
+The system does however fulfill the third criteria (see Introduction\:\ref{section:intro}) because of the chosen sensors, namely a LIDAR with sufficient range.
+
+%======================================================
+% Errors and drift
+
+% Robot mass and slip
+The constructed robot had significant wheel slip because of low mass and thus poor traction, which results in a substantial source of errors.
+% Drift
+Given the duality introduced in the Introduction\:\ref{section:intro}, an error in pose estimation or the map can be critical since this error will grow and errors will accumulate, further degrading the map and pose estimation\:\cite{siegwart_introduction_2011}\cite{zhao_occupancy-slam_2022}. A common source of this error is actuator noise which includes: floor contact (e.g. wheel slip, wheel deformation, uneven floor) and poor resolution of values (e.g. time, sensor measurements)\:\cite{siegwart_introduction_2011}\cite{corke_robotics_2023}. All of this can contribute to erroneous integration which leads to error accumulation which will grow with time which leads to further errors in position estimate and map drift\:\cite{siegwart_introduction_2011}\cite{corke_robotics_2023}.
+
+\begin{comment}
+% Correlation
+Sensor errors will always be present and the SLAM algorithm is always going to make some mistakes. Thus the spatial correlation of map features introduced in the Introduction\:\ref{section:intro} will never achieve full correlation. This in turn will limit the awareness of the algorithm and its ability to make intelligent decisions, confining it to some degree to local information. The reason being that if full correlation is not achieved, then information of an object or feature (could also be the robot itself), does not necessarily allow the algorithm to determine how it relates to a second object, despite having seen both previously in this scenario. The algorithm can not use correlation information to figure this out because the correlation is not complete because of sensor errors and mistakes. Thus forcing the algorithm to rely on local sensor information, hurting its awareness and limiting its ability to make intelligent decisions. One can imagine the results of this being as if the map only contains disconnected fragments, and the robot being confined only to its current fragment, unable to see or make use of the entirety of the map. It is important to not mistakenly interpret that this concerns the absolute position of features on the map, this only concerns how features relate to each other, not their absolute position.
+\end{comment}
+
+%======================================================
+% SLAM limitations
+
+% Dynamic environments
+SLAM still has a number of weak points, including limited capabilities in dynamic environments (since most SLAM algorithms assume static environments)\:\cite{siegwart_introduction_2011}\cite{sousa_systematic_2022}, as well as harsh environments\:\cite{cadena_past_2016}. 
+% SLAM parameters
+Additionally, the parameters for most SLAM algorithms are specific to the environment where their task is defined, thus complicating their deployment in different environments\:\cite{khole_comprehensive_2023}.
+% Data association
+SLAM is also sensitive to incorrect data association (incorrect matching of features), particularly during loop closure\:\cite{siegwart_introduction_2011}, and sensor aliasing complicates this even further\:\cite{cadena_past_2016}. 
+% Loop closing
+Erroneous loop closing is similarly inevitable in the presence of sensor aliasing, causing significant damage to the SLAM results\:\cite{cadena_past_2016}.
+% More info
+This report is unable to cover all SLAM limitations and problems. The interested reader is hence refereed to the comprehensive survey by Cadena \textit{et al.}\:\cite{cadena_past_2016}, which extensively covers the limitations, difficulties and open problems present in SLAM research (including sensor failures, outliers, solvers failing to converge to global minimum, and unbounded growth in memory and computation). For specific focus on the limitations present in long-term deployment of SLAM, see the thorough literature review by Sousa \textit{et al.}\:\cite{sousa_systematic_2022}.
+% Implication
+It is important to consider these problems since they limit the robot, despite the advanced SLAM algorithms currently available.
+
+%======================================================
+% Navigation limitations
+
+% DWB
+While DWB (default local trajectory tracker of Navigation2) is very flexible and configurable, it does suffer from interrelated parameters which can damage performance if not tuned correctly, which is complex and not a trivial task\:\cite{macenski_desks_2023}.
+
+%======================================================
+% Future
+
+It is the main goal in future work to make the robot completely autonomous (removing the need for users to issue waypoints) and for all code to run on the robot without the use of an external PC.
+
+%------------------------------------------------------------------------------------------
+
+
+%------------------------------------------------------------------------------------------
+\begin{comment}
+    % Kidnapped robot
+    %Another limitation common in SLAM algorithms is the kidnapped robot problem\:\cite{siegwart_introduction_2011}. The reason being that most algorithms struggle with localization if the robot has been moved, most algorithms continue to believe that the robot still is somewhere at the old location, failing to realize it has been moved\:\cite{siegwart_introduction_2011}.
+
+    % Nav2 overkill
+    %The advanced algorithms used by Navigation2 far exceeds what is required for the simple circular differential drive robot used in this project, and a simple A* algorithm would have sufficed\:\cite{macenski_open-source_2024}.
+    
+    %With Kalman filter localization, even bad measurements improve the certainty of the estimate of the robots position\:\cite{siegwart_introduction_2011}.
+\end{comment}
+%------------------------------------------------------------------------------------------

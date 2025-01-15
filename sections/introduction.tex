@@ -1,0 +1,137 @@
+\section{Introduction}
+\label{section:intro}
+%------------------------------------------------------------------------------------------
+% Present work
+
+% Overview
+This report covers the construction and development of a circular differential drive SLAM robot. 
+The constructed robot was equipped with a \href{https://www.mouser.se/ProductDetail/426-DFR0315}{2D LIDAR}, a \href{https://www.mouser.se/ProductDetail/426-SEN0142}{6-DOF IMU} and two \href{https://www.amazon.se/dp/B07WP3XDLC?psc=1&ref=ppx_yo2ov_dt_b_product_details}{wheel encoders}. It had two \href{https://www.amazon.se/dp/B07WP3XDLC?psc=1&ref=ppx_yo2ov_dt_b_product_details}{motorized wheels} and two stabilizing \href{https://www.mouser.se/ProductDetail/485-3948}{spherical wheels}. A \href{https://www.electrokit.com/en/raspberry-pi-4-model-b/8gb}{Raspberry Pi 4} was used for central control and an \href{https://store.arduino.cc/products/arduino-nano}{Arduino Nano} was used for motor control. 
+\href{https://docs.ros.org/en/foxy/index.html}{ROS2} was used for robot communication and interaction between subsystems. SLAM was integrated using \href{https://wiki.ros.org/slam_toolbox}{SLAM Toolbox} and path planning was supported by \href{https://navigation.ros.org/tutorials/docs/navigation2_with_slam.html}{Navigation2}, both ROS compatible.
+% Goal
+It was the goal that the robotic system would be able to operate in varied conditions and be as simple as possible. The following criteria were therefor established, the system should:
+\begin{enumerate}
+    \item Work in any environmental condition (e.g. light, dust, rain).
+    \item Work in human-made environments, both indoors and outdoors. It is not required to handle traversing natural terrains, containing extremely uneven surfaces or dense vegetation.
+    \item Have sensing capabilities of at least five meters.
+    \item Have good online performance and thus a real time constraint of less than $100\:\text{ms}$ computation time per sensor update.
+\end{enumerate}
+
+% Introduction to SLAM
+Localization is an important function for robots to autonomously navigate their environment and reach their goal\:\cite{kondo_localizability_2022}. A map is required to allow the robot to localize itself, avoid obstacles, efficiently perform path planning and intelligently make decisions\:\cite{kondo_localizability_2022}\cite{andriawan_eka_wijaya_research_2019}\cite{cai_lidarinertial_2023}\cite{placed_survey_2023}. These two problems form the active research area known as simultaneous localization and mapping (SLAM)\:\cite{kondo_localizability_2022}\cite{mu_occupancy_2022}\cite{khole_comprehensive_2023}.
+
+% Application
+The possible application areas of SLAM for autonomous robots are numerous and lies at the center for allowing robots to perform their tasks without human aid or intervention, even in unknown environments\:\cite{khole_comprehensive_2023}. These applications include: tasks in areas which are inaccessible to humans, self driving cars, planetary exploration, agriculture, mining, warehouses, military and safety\:\cite{khole_comprehensive_2023}\cite{adzhar_review_2020}\cite{khan_investigation_2022}\cite{liu_path_2023}\cite{fasiolo_comparing_2023}.
+
+%------------------------------------------------------------------------------------------
+% Background and State of the art
+
+%======================================================
+% SLAM
+
+% Duality
+There is an important duality between map and localization, the robot needs a map for precise localization, and it needs to localize itself to accurately build the map\:\cite{siegwart_introduction_2011}\cite{schulz_real-time_2020}\cite{corke_robotics_2023}. Thus forming a complex intertwined dependency between mapping and localization\:\cite{khole_comprehensive_2023}. Moreover, the representation of one affects the other, and similarly, errors and inaccuracies in one influences the other\:\cite{siegwart_introduction_2011}. 
+
+\begin{comment}
+% Correlation
+This leads to an important concept which in this paper will be called spatial correlation of map features. As the robot moves, observes and builds the map, the estimate of the robot position becomes correlated with map features, and map features also become correlated with each other\:\cite{siegwart_introduction_2011}. The robots estimate of its position is naturally dependent on the map it has built for localization and the map features it contains\:\cite{siegwart_introduction_2011}. Similarly, if the exact location of one map feature is known, given a complete map, the exact location of other map features can be established in relation to the first, in an ideal scenario\:\cite{siegwart_introduction_2011}. 
+This correlation naturally begins at zero, and as the robot moves, makes more observations and builds the map, the correlation increases, ideally reaching full correlation at the limit, assuming no sensor errors\:\cite{siegwart_introduction_2011}.
+\end{comment}
+
+% Scan matching and loop closure
+The most common solution to reduce the accumulation of errors which can be caused by this duality and intertwined dependency is to employ scan matching and efficient use of loop closure\:\cite{schulz_real-time_2020}. 
+% Scan matching
+Scan matching is when the SLAM algorithm tries to predict which features it should observe based on its current estimated position and the map, and then tries to match this against the observed features\:\cite{siegwart_introduction_2011}. This is used to get a better estimate of the current position, drastically reduce position drift and reduce map misalignment\:\cite{siegwart_introduction_2011}. 
+% Loop closure
+Loop closure is when the robot observes something it has observed before, having come back to a place it recognizes\:\cite{siegwart_introduction_2011}\cite{chen_slam_2022}\cite{ahmed_active_2023}. This causes the algorithm to become more certain about its position and the path it has taken, and adjusting the map accordingly to ensure a globally consistent map\:\cite{siegwart_introduction_2011}\cite{corke_robotics_2023}\cite{filip_lidar_2023}\cite{chen_slam_2022}\cite{ahmed_active_2023}. 
+Loop closure has been found to be especially important in longer indoor surveys containing repetitive elements\:\cite{fasiolo_comparing_2023}.
+
+% Transition sentence
+There are a number of different ways to represent the world around the robot and its location in the world.
+% Localization
+Pose-graph is a way to represent different robot poses and their relationship\:\cite{corke_robotics_2023}. The nodes in the graph represent poses and the edges represent the spatial relationship between nodes (poses), the graph can also contain additional nodes which represent landmarks\:\cite{corke_robotics_2023}.
+
+% Map represenation
+% Occupancy grids
+A common map representation is an occupancy grid, which is a fixed decomposition map representation\:\cite{siegwart_introduction_2011}, where the world is divided into equally sized cells, commonly square shaped\:\cite{liu_path_2023}.  Occupancy grids can be divided into two different representations, probabilistic and binary\:\cite{andriawan_eka_wijaya_research_2019}\cite{corke_robotics_2023}. 
+% Probabilistic
+Probabilistic places a certainty value on each cell in the occupancy grid depending on the certainty of the estimate of the state of the cell\:\cite{andriawan_eka_wijaya_research_2019}\cite{corke_robotics_2023}. The value is commonly in the range of $[0,1]$, where $1$ is complete certainty of obstacle and $0$ is complete certainty of no obstacle\:\cite{andriawan_eka_wijaya_research_2019}\cite{corke_robotics_2023}. 
+% Binary
+The binary representation places a occupied or free (binary) value on each cell, where $1$ is obstacle and $0$ is no obstacle\:\cite{andriawan_eka_wijaya_research_2019}\cite{corke_robotics_2023}.
+% Good for range based sensors
+Occupancy grids are well suited for applications which use range-based sensors\:\cite{siegwart_introduction_2011}.
+% Algorithms which use occupancy grids
+A number of algorithms use occupancy grids, including: Gmapping, Hector SLAM, Cartographer and SLAM Toolbox\:\cite{mu_occupancy_2022}\cite{macenski_slam_2021}.
+% Cost map
+A related world model is a costmap, which places a cost value on each individual cell in the range of $[0,255]$, with exception values $254$ for obstacle, and $255$ for unknown\:\cite{macenski_desks_2023}. This can then be used by path planning algorithms which prefer lower cost cells to find the best path. It is worth noting that the cost need not only be a function of goal distance, but could encode other information\:\cite{macenski_desks_2023}, like distance to obstacles or difficulty of traversing the terrain.
+
+%======================================================
+% Sensors
+
+% Sensors
+Sensors play a vital role in SLAM, they are required by the SLAM algorithm to obtain information about the environment, and use that information to localize itself and map the environment\:\cite{khan_investigation_2022}.
+Two groups of sensors are generally used, one which measures the robots odometry and one which measures the surrounding\:\cite{khan_investigation_2022}.
+
+% Multiple sensors
+The use of multiple sensors and combining their data (sensor fusion) has demonstrated better SLAM performance than the use of only single sensor information\:\cite{cai_lidarinertial_2023}, and is commonly used by SLAM algorithms and studies\:\cite{khole_comprehensive_2023}\cite{filip_lidar_2023}. Sensor fusion can help to reduce drift caused by odometry, reduce the impact of sensor errors (increasing accuracy and effectiveness), and provide complementary sensor information\:\cite{liu_path_2023}\cite{filip_lidar_2023}. 
+
+% Odometry
+Common odometry sensors include wheel encoders, global positioning systems (GPS) and inertial measurement units (IMU)\:\cite{khan_investigation_2022}. 
+% GPS
+GPS is widely used but is limited to outdoor environments and is expensive\:\cite{khan_investigation_2022}.
+% IMU
+IMUs have significant drift error and error accumulation because they generally lack global map correction\:\cite{khan_investigation_2022}\cite{fasiolo_comparing_2023}. They are therefor not viable as the sole sensor for pose estimation during longer periods of time\:\cite{khan_investigation_2022}\cite{fasiolo_comparing_2023}.
+% Encoders
+Wheel encoders similarly has significant drift if used as the sole odometry sensor, quickly resulting in critical errors in pose estimation\:\cite{cadena_past_2016}.
+% IMU + encoders
+However, the use of wheel encoders combined with IMU offers a cheap alternative that works in both indoor and outdoor environments\:\cite{khan_investigation_2022}. Additionally, they complement each other by reducing the drift caused by the other and provides a relatively reliable, accurate and compact solution\:\cite{khan_investigation_2022}.
+
+% Surrounding
+Various sensors can be used for measuring the surrounding, including: acoustic (e.g. ultrasound), cameras, radio detection and ranging (RADAR) and light detection and ranging (LIDAR)\:\cite{khan_investigation_2022}. However, RADAR and LIDAR stand out because of their low computational cost and efficiency regardless of the environment\:\cite{khan_investigation_2022}.
+% LIDAR
+Laser scanners (like LIDAR) are among the most commonly used sensors for SLAM\:\cite{siegwart_introduction_2011}\cite{corke_robotics_2023}\cite{macenski_slam_2021}. A number of algorithms use them, including:  GMapping, Karto, Cartographer, Hector and SLAM Toolbox\:\cite{macenski_slam_2021}.
+LIDARs are robust, provide very accurate sensor readings with high resolution, they have good measurement range with up to $360 \degree$ detection and are not dependent on illumination\:\cite{khan_investigation_2022}\cite{filip_lidar_2023}\cite{macenski_slam_2021}. 
+However, LIDARs do not provide visual information or the dense amount of information that cameras do\:\cite{siegwart_introduction_2011}. They also have very high power consumption and they lack in feature extraction\:\cite{khan_investigation_2022}.
+The integration of an IMU together with a LIDAR has shown improved performance in cases with irregular terrain and environments where there are a lot of overlay between LIDAR scans\:\cite{fasiolo_comparing_2023}.
+% RADAR
+RADAR is comparable with LIDAR on most metrics, but offers a lower monetary cost and better performance in harsh environmental conditions at the expense of worse resolution, range and computational cost\:\cite{khan_investigation_2022}\cite{fritsche_fusing_2018}.
+% Camera
+Cameras have many advantages over LIDAR, including: cheaper, lower power demand, no moving parts, lower mass and richer information (thus less likely to provide incorrect data association and more likely to provide unique and distinct data)\:\cite{khan_investigation_2022}\cite{siegwart_introduction_2011}. However, they do not provide distance information, unless more than one is used\:\cite{khan_investigation_2022}\cite{siegwart_introduction_2011}\cite{filip_lidar_2023}, or an RGB-D camera is used\:\cite{chen_slam_2022}. Additionally, they have higher computational cost\:\cite{khan_investigation_2022}, do not work in very bright or dark light conditions\:\cite{corke_robotics_2023}\cite{filip_lidar_2023}, and they have limited range and field of view\cite{fasiolo_comparing_2023}. 
+% Acoustic
+Acoustic sensors are a very simple and cheap option with low computational cost, but has limited range\:\cite{khan_investigation_2022}.
+For a more thorough investigation of the sensors commonly used in SLAM, see\:\cite{khan_investigation_2022}.
+
+%======================================================
+% Navigation/Path planning
+
+% Overview
+Once a map has been created, the robot requires a navigation system and path planning algorithm to efficiently traverse to the target position. Path planning can be broken up in two parts, global path planning which is tasked with finding a safe and optimal path through the known environment (the map)\:\cite{adzhar_review_2020}\cite{liu_path_2023}\cite{muhammad_path_2020}, and local trajectory tracking which deals with the unknown or partially known environment of following this path\:\cite{macenski_desks_2023}\cite{muhammad_path_2020}.
+% Constraints
+Considerations like feasibility constraints (e.g. dynamics and kinematics) and obstacle avoidance can be addressed by both the global path planner and the local trajectory tracker\:\cite{macenski_desks_2023}. Whereas constraints concerning dynamic environments, like reducing the chance of collision (non static objects), and considerations like acceleration is the task of the local trajectory tracker\:\cite{macenski_desks_2023}\cite{muhammad_path_2020}.
+% Search and sampling based
+Two types of global path planners are typically identified, search based (e.g. Dijkstra, A*) and sampling based (e.g. rapidly exploring random trees)\:\cite{macenski_desks_2023}.
+
+%------------------------------------------------------------------------------------------
+
+
+%------------------------------------------------------------------------------------------
+\begin{comment}
+
+    % A*
+    %A* is a heuristic search algorithm which is suitable for global path planning in the case of holonomic and circular differential-drive robots\:\cite{macenski_open-source_2024}.
+    % Pure pursuit
+    %Pure pursuit is one of the most common types of algorithms used for local trajectory planning (path tracking), it is simple and effective\:\cite{macenski_regulated_2023}. It has proven to be reliable in a diverse range of environmental conditions\:\cite{macenski_regulated_2023}. However, it can have overshoot and undershoot problems which can hurt the path following, it also does not consider dynamics of the robot or kinematic limitations\:\cite{macenski_regulated_2023}.
+    
+
+    Avoid contractions, write ``do not'' instead of ``don't.''
+
+    The word ``data'' is plural, not singular. The subscript for the permeability of vacuum $\mu _{0}$ is zero, not a lowercase letter ``o.'' The term for residual magnetization is ``remanence''; the adjective is ``remanent''; do not write ``remnance'' or ``remnant.'' Use the word ``micrometer'' instead of ``micron.'' A graph within a graph is an ``inset,'' not an ``insert.'' The word ``alternatively'' is preferred to the word ``alternately'' (unless you really mean something that alternates). Use the word ``whereas'' instead of ``while'' (unless you are referring to simultaneous events). Do not use the word ``essentially'' to mean ``approximately'' or ``effectively.'' Do not use the word ``issue'' as a euphemism for ``problem.'' When compositions are not specified, separate chemical symbols by en-dashes; for example, ``NiMn'' indicates the intermetallic compound Ni$_{0.5}$Mn$_{0.5}$ whereas ``Ni--Mn'' indicates an alloy of some composition Ni$_{x}$Mn$_{1-x}$.
+    
+    Be aware of the different meanings of the homophones ``affect'' (usually a verb) and ``effect'' (usually a noun), ``complement'' and ``compliment,'' ``discreet'' and ``discrete,'' ``principal'' (e.g., ``principal investigator'') and ``principle'' (e.g., ``principle of measurement''). Do not confuse ``imply'' and ``infer.''
+    
+    There is no period after the ``et'' in the Latin abbreviation ``\emph{et al.}'' (it is also italicized). The abbreviation ``i.e.,'' means ``that is,'' and the abbreviation ``e.g.,'' means ``for example'' (these abbreviations are not italicized).
+    
+    When citing a section in a book, please give the relevant page numbers. In text, refer simply to the reference number. Do not use ``Ref.'' or ``reference'' except at the beginning of a sentence: ``Reference \cite{b3} shows $\ldots$ .''
+    
+    Generally, this section provides an introduction and literature overview, aim of the work and research questions.
+\end{comment}
+%------------------------------------------------------------------------------------------

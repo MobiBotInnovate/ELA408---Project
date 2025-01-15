@@ -1,0 +1,57 @@
+% THIS FILE IS ELA408 SPECIFIC, CONTAINING TOOLBOX INFORMATION WHICH IS NOT NECESSARY FOR ELA400
+%------------------------------------------------------------------------------------------
+
+% Boasted features
+SLAM Toolbox boasts a number of impressive features compared to its competitors, including\:\cite{macenski_slam_2021}:
+\begin{itemize}
+    \item Being able to map areas as large as $9000\:\text{m}^2$
+    \item Serialize (save) and deserialize (load) map, allowing for continued expanding of a previous map
+    \item Being able to merge multiple maps using kinematic map merging
+    \item Being able to perform synchronous mapping, asynchronous mapping or pure localization
+    \item Faster measurement matching, better optimization and more (see\:\cite{macenski_slam_2021})
+\end{itemize}
+% Lifelong mapping
+It offers has a functionality called lifelong mapping which not only allows SLAM to continue refining the map and update it, but also remove redundant and outdated data by the help of a heuristic\:\cite{macenski_use_2019}. 
+% KD-Tree
+On top of that it also makes use of k-dimensional trees (KD-Tree) to perform search matching (nearest neighbor search matching) for localization of the robot position\:\cite{macenski_slam_2021}.
+% Parameters etc
+A subset of the parameter options offered by SLAM Toolbox are outlined in Table.\:\ref{tab:slam_toolbox_params}\:\cite{macenski_slam_2021}\cite{macenski_use_2019}.
+\begin{table}
+    \centering
+    \resizebox{\columnwidth}{!}{\noindent\begin{tabular}{|c|c|} \hline
+         \textbf{Parameter}                                         & \textbf{Options}                                      \\ \hline
+         Nonlinear solver                                           & Ceres solver                                          \\
+                                                                    & SPA solver                                            \\
+                                                                    & g2o solver                                            \\ \hline
+         Linear solver used by Ceres                                & sparse Cholesky factorization                         \\
+                                                                    & Schur complement                                      \\
+                                                                    & Schur complement and iterative solver                 \\
+                                                                    & CGNR (conjugate gradient normal residual)             \\ \hline
+         Preconditioner  to use with linear solver                  & Identity (none)                                       \\
+                                                                    & Jacobi                                                \\
+                                                                    & Schur complement Jacobi                               \\ \hline
+         Ceres trust region strategy                                & Levenberg-Marquardt algorithm                         \\
+                                                                    & Dogleg algorithm                                      \\ \hline
+         Dogleg strategy to use if the trust strategy is Dogleg     & Traditional Dogleg                                    \\
+                                                                    & Subspace Dogleg                                       \\ \hline
+         Loss function to reject outliers                           & None                                                  \\
+                                                                    & Huber loss                                            \\
+                                                                    & Cauchy loss                                           \\ \hline
+        KD-Tree distance metric                                     & Manhattan distance functor                            \\ 
+                                                                    & Squared Euclidean distance functor                    \\
+                                                                    & Squared Euclidean (L2) distance functor               \\
+                                                                    & SO2 distance functor                                  \\
+                                                                    & SO3 distance functor (uses L2\_Simple)                \\ \hline
+    \end{tabular}}
+    \caption{A subset of the parameter options offered by SLAM Toolbox\:\cite{macenski_slam_2021}\cite{macenski_use_2019}.}
+    \label{tab:slam_toolbox_params}
+\end{table}
+
+%------------------------------------------------------------------------------------------
+
+
+%------------------------------------------------------------------------------------------
+\begin{comment}
+    %The occupancy grid map has default scale of $1\:\text{grid coordinate} = 1\:\text{pixel} = 0.05\:\text{meters}$\:\cite{macenski_slam_2021}\cite{macenski_use_2019}.    
+\end{comment}
+%------------------------------------------------------------------------------------------

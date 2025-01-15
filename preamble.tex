@@ -1,0 +1,53 @@
+% Report template for Mälardalen University
+% Original template can be found: 
+% https://www.overleaf.com/latex/templates/ieee-bare-demo-template-for-conferences/ypypvwjmvtdf
+% Template file structure organised by: Emil Persson
+% The following packages should follow the IEEE conference guidelines.
+
+%------------------------------------------------------------------------------------------
+% Packages and includes
+
+\usepackage{comment}
+% Sub figures
+\usepackage{caption}
+\usepackage{subcaption}
+% Degree symbol
+\usepackage{textcomp, gensymb}
+\usepackage{microtype}
+
+% Fix overfull box of links
+\usepackage[hyphens]{url}
+\def\UrlBreaks{\do\/\do-}
+
+%------------------------------------------------------------------------------------------
+% New commands and declerations
+
+%------------------------------------------------------------------------------------------
+
+% Swedish language package 
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[american]{babel}
+
+%------------------------------------------------------------------------------------------
+
+% Graphics
+\usepackage{graphicx, float, blindtext}
+
+\newcommand\IEEEhyperrefsetup{
+bookmarks=true,bookmarksnumbered=true,%
+colorlinks=true,linkcolor={black},citecolor={black},urlcolor={black}%
+}
+
+% Preferred hyperref setup, Michael Shell
+\usepackage[\IEEEhyperrefsetup, pdftex, breaklinks]{hyperref}
+
+% Maths
+\usepackage{mathtools}
+
+%------------------------------------------------------------------------------------------
+% These packages must be at the end
+\usepackage[nolist,nohyperlinks]{acronym}
+\usepackage{cleveref}
+\graphicspath{{images/}}
+%------------------------------------------------------------------------------------------
